@@ -5,7 +5,7 @@
  ____/ _|
 |_  / |_   author   : F. Zicklam
  / /|  _|  editor   : F. Zicklam
-/___|_|    last edit: 2021-08-11
+/___|_|    last edit: 2021-10-27
 ----------------------------------------------------------------------------
 
 Simple Http class to send json API requests
@@ -17,7 +17,7 @@ Supports:
 Example usage after import:
 
     # Create instance:
-    self._http = Http(url, user, secret)
+    self._http = Http(url, user, secret, [auth=(Bearer, Basic, Digest)])
 
     # Http call:
     response, code, *_ = self._http('PUT', '/object/endpoint', etag=self_etag, data=json.dumps(data))
@@ -27,10 +27,11 @@ Example usage after import:
     etag = headers['ETag'][1:-1]
 """
 
+import base64
 import requests
 
 class Http():
-    def __init__(self, url=None, user=None, secret=None, **kwargs):
+    def __init__(self, url=None, user=None, secret=None, auth="Bearer", **kwargs):
         """ HTTP Configuration """
         self._timeout = 30.0
 
@@ -40,7 +41,12 @@ class Http():
 
         """ build up http session """
         self._session = requests.session()
-        self._session.headers['Authorization'] = f"Bearer {self._user} {self._secret}"
+        if auth == "Bearer":
+            self._session.headers['Authorization'] = "Bearer {user} {secret}".format(user=self._user, secret=self._secret)
+        elif auth == "Basic":
+            self._session.headers['Authorization'] = "Basic {}".format(base64.b64encode((f"{self._user}:{self._secret}").encode()).decode())
+        elif auth == "Digest":
+            print("Not supported so far")
         self._session.headers['Accept'] = 'application/json'
 
     """ Generic method (__call__ method enable instance like function behavior) """
