@@ -1,0 +1,37 @@
+---
+# https://docs.pulpproject.org/pulp_rpm/restapi.html#tag/Content:-Packages/operation/content_rpm_packages_list
+- name: Check latest version on our repository
+  uri:
+    url: "{{ pulp_url }}/pulp/api/v3/content/rpm/packages/?name=check-mk-agent&ordering=-version&fields=name,version"
+  register: pulp_rpm_package_versions
+
+- name: Output pulp_rpm_package_versions
+  debug:
+    msg: "{{ pulp_rpm_package_versions.json.results }}"
+  # "msg": [
+  #     {
+  #         "name": "check-mk-agent",
+  #         "version": "2.1.0p17"
+  #     },
+  #     {
+  #         "name": "check-mk-agent",
+  #         "version": "2.1.0p16"
+  #     },
+  #     {
+  #         "name": "check-mk-agent",
+  #         "version": "2.0.0p25"
+  #     }
+  # ]
+    
+- set_fact: pulp_rpm_package_version_210="{{ pulp_rpm_package_versions | json_query(\"json.results[?starts_with(version, '2.1.0')].version\") | sort(reverse=True) | first }}"
+- set_fact: pulp_rpm_package_version_200="{{ pulp_rpm_package_versions | json_query(\"json.results[?starts_with(version, '2.0.0')].version\") | sort(reverse=True) | first }}"
+
+- name: Output
+  debug:
+    msg:
+      - "{{ pulp_rpm_package_version_210 }}"
+      - "{{ pulp_rpm_package_version_200 }}"
+  # "msg": [
+  #     "2.1.0p17",
+  #     "2.0.0p25"
+  # ]
