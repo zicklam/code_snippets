@@ -1,4 +1,8 @@
 ---
 - name: output file content from variable name when exist
   debug:
-    msg: "{{ (lookup('file', (lookup('vars', (item.value.client_cert | default(omit)), errors='ignore', skip=true, default=client_cert_default) | default(omit)), errors='ignore', skip=true)) | default(omit) }}"
+    msg:
+      - "{{ (lookup('file', (lookup('vars', (item.value.client_cert | default(omit)), errors='ignore', skip=true, default=client_cert_default) | default(omit)), errors='ignore', skip=true)) | default(omit) }}"
+      # if omit need as result when not available
+      - "{{ (item.value.client_cert is defined) | ternary( (lookup('file', (lookup('vars', (item.value.client_cert | default(omit)), errors='ignore', skip=true, default=client_cert_default) | default(omit)), errors='ignore', skip=true)) , omit) }}"
+
