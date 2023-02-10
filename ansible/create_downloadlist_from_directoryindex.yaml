@@ -1,0 +1,16 @@
+---
+# Example input:
+#   download_variable = {'package': 'mysql-shell', 'sourcerepo': 'https://repo.mysql.com/yum/mysql-tools-community/el/8/x86_64/'}
+# -----------------------------------------------------------------------------
+
+# create rpm package list
+# -----------------------------------------------------------------------------
+- name: "Get directory index from {{ download_variable.sourcerepo }}"
+  uri:
+    url: "{{ download_variable.sourcerepo }}"
+    return_content: yes
+  register: sourcerepo_html_index
+
+- name: "Get relevant package list with only exact match of RPM package name"
+  set_fact:
+    sourcerepo_packages: "{{ sourcerepo_html_index.content.split('\n') | select('search', '.rpm') | select('search', download_variable.package) | select('search', item.arch) | map('regex_replace', '(?i).*<a href=\"([^\"]+).*', '\\1') | map('regex_search', download_variable.package + '[\\-]+[\\d+.-]+.*.rpm$') | reject('none') | list }}"
